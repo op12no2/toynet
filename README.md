@@ -11,7 +11,7 @@ Alexander's post was the one that made everything crystal clear to me; it's wort
 
 If there are errors in the bias and relu/linear activator code, it's my fault - those are the bits I added :)
 
-By default it runs the batching example on page 33.
+By default it runs the batching example on (A4 size) page 33.
 
 ```
 [C:\projects\toynet\trunk]node toynet.js                                            
