@@ -36,25 +36,32 @@ var netOutputSize  = 2;  // output layer.
 
 //{{{  build net
 
-var NETIN          = 0;  // node bias + sum of weights
+var netUseBias = 0;  // with is set to 0 everythign works like the blog post.
+                     // turn it on to experiment with using bias as well.
+
+//
+// Each node has 9 elements.
+//
+
+var NETIN          = 0;  // node input = bias + sum of weights
 var NETGIN         = 1;  // gradient of above
-var NETOUT         = 2;  // result of activation applied to NETIN
+var NETOUT         = 2;  // node output = result of activation applied to node input
 var NETGOUT        = 3;  // gradient of above
-var NETWEIGHTS     = 4;  // weights for a node
+var NETWEIGHTS     = 4;  // weights for node
 var NETGWEIGHTS    = 5;  // gradients of above
 var NETGWEIGHTSSUM = 6;  // sum of above when batching
-var NETBIAS        = 7;  // bias for a node
+var NETBIAS        = 7;  // bias for node
 var NETGBIAS       = 8;  // gradient of above
 var NETGBIASSUM    = 9;  // sum of above when batching
 
-var NETCELLSIZE    = 10;  
+var NETNODESIZE    = 10;
 
 var neti = Array(netInputSize);
 var neth = Array(netHiddenSize);
 var neto = Array(netOutputSize);
 
 for (var h=0; h < netHiddenSize; h++) {
-  neth[h]                 = Array(NETCELLSIZE);
+  neth[h]                 = Array(NETNODESIZE);
   neth[h][NETIN]          = 0;
   neth[h][NETGIN]         = 0;
   neth[h][NETOUT]         = 0;
@@ -68,7 +75,7 @@ for (var h=0; h < netHiddenSize; h++) {
 }
 
 for (var o=0; o < netOutputSize; o++) {
-  neto[o]                 = Array(NETCELLSIZE);
+  neto[o]                 = Array(NETNODESIZE);
   neto[o][NETIN]          = 0;
   neto[o][NETGIN]         = 0;
   neto[o][NETOUT]         = 0;
@@ -147,7 +154,7 @@ function netForward(inputs) {
 
   for (var h=0; h < netHiddenSize; h++) {
     var hidden = neth[h];
-    hidden[NETIN] = hidden[NETBIAS];
+    hidden[NETIN] = hidden[NETBIAS] * netUseBias;
     for (var i=0; i < netInputSize; i++) {
       hidden[NETIN] += hidden[NETWEIGHTS][i] * neti[i];
     }
@@ -156,7 +163,7 @@ function netForward(inputs) {
 
   for (var o=0; o < netOutputSize; o++) {
     var output = neto[o];
-    output[NETIN] = output[NETBIAS];
+    output[NETIN] = output[NETBIAS] * netUseBias;
     for (var h=0; h < netHiddenSize; h++) {
       output[NETIN] += output[NETWEIGHTS][h] * neth[h][NETOUT];
     }
@@ -276,19 +283,19 @@ function netApplyGradients(b,alpha) {
 
 //}}}
 
-neth[0][NETBIAS]       = 0.0;
+neth[0][NETBIAS]       = 0.0;  // ignored unless netUseBias is 1. bias not used in blog post.
 neth[0][NETWEIGHTS][0] = 6.0;
 neth[0][NETWEIGHTS][1] = -2.0;
 
-neth[1][NETBIAS]       = 0.0;
+neth[1][NETBIAS]       = 0.0;  // ditto.
 neth[1][NETWEIGHTS][0] = -3.0;
 neth[1][NETWEIGHTS][1] = 5.0;
 
-neto[0][NETBIAS]       = 0.0;
+neto[0][NETBIAS]       = 0.0;  // ditto.
 neto[0][NETWEIGHTS][0] = 1.0;
 neto[0][NETWEIGHTS][1] = 0.25;
 
-neto[1][NETBIAS]       = 0.0;
+neto[1][NETBIAS]       = 0.0;  // ditto.
 neto[1][NETWEIGHTS][0] = -2.0;
 neto[1][NETWEIGHTS][1] = 2.0;
 
@@ -298,9 +305,9 @@ var t1 = [1,0];
 var i2 = [-1,4];
 var t2 = [0,1];
 
-netHiddenActivator = [sigmoid,dsigmoid];
+netHiddenActivator = [sigmoid,dsigmoid]; // as per blog post.
 //netHiddenActivator = [relu,drelu];
-netOutputActivator = [sigmoid,dsigmoid];
+netOutputActivator = [sigmoid,dsigmoid]; // as per blog post.
 
 var inputList  = [i1,i2];
 var targetList = [t1,t2];
