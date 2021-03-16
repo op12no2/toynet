@@ -7,4 +7,4 @@ Download the file and run in a Javascript interpreter like Nodejs for example.
 
 The code is generalised a bit so the shape of the network can be changed. I added bias and alternative activatiion functions. 
 
-This post was the one that made everything crystal clear; it's worth working through page by page, using the Javascript model to console.log() the relevant data as it's presented in the post.
+This post was the one that made everything crystal clear to me; it's worth working through page by page, using the Javascript model to console.log() the relevant data as it's presented in the post.
