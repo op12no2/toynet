@@ -9,3 +9,5 @@ it's easy to play around with the model using console.log().
 The code is generalised a bit so the shape of the network can be changed. I added bias and alternative activation functions. 
 
 Alexander's post was the one that made everything crystal clear to me; it's worth working through page by page, using the Javascript model to console.log() the relevant data as it's presented in the post.
+
+If there are errors in the bias and relu/linear activator code it's my fault - those are the bits I added :)
