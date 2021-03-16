@@ -8,4 +8,4 @@ it's easy to play around with the model using console.log().
 
 The code is generalised a bit so the shape of the network can be changed. I added bias and alternative activatiion functions. 
 
-This post was the one that made everything crystal clear to me; it's worth working through page by page, using the Javascript model to console.log() the relevant data as it's presented in the post.
+Alexander's post was the one that made everything crystal clear to me; it's worth working through page by page, using the Javascript model to console.log() the relevant data as it's presented in the post.
