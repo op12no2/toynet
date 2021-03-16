@@ -36,7 +36,7 @@ var netOutputSize  = 2;  // output layer.
 
 //{{{  build net
 
-var NETIN          = 0;  // bias + sum of weights
+var NETIN          = 0;  // node bias + sum of weights
 var NETGIN         = 1;  // gradient of above
 var NETOUT         = 2;  // result of activation applied to NETIN
 var NETGOUT        = 3;  // gradient of above
@@ -47,7 +47,7 @@ var NETBIAS        = 7;  // bias for a node
 var NETGBIAS       = 8;  // gradient of above
 var NETGBIASSUM    = 9;  // sum of above when batching
 
-var NETCELLSIZE    = 10;
+var NETCELLSIZE    = 10;  
 
 var neti = Array(netInputSize);
 var neth = Array(netHiddenSize);
