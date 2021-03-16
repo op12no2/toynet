@@ -5,10 +5,10 @@
 // "A worked example of backpropagation" at
 // https://alexander-schiendorfer.github.io/2020/02/24/a-worked-example-of-backprop.html
 //
-// Objects not used because of the longer term development intentions and optimisations
-// inside Lozza chess https://github.com/op12no2/lozza
+// Objects not used because of the longer term development intentions and planned
+// optimisations inside Lozza chess https://github.com/op12no2/lozza
 //
-// Also many of the loops can be collapsed, functions optimised and globals removed - but
+// Many of the loops can be collapsed, functions optimised and globals removed - but
 // I've kept it all simple for clarity.
 //
 // If you use a folding editor the fold marks are {{{ and }}}.
@@ -30,31 +30,21 @@ var netInputSize   = 2;  // input layer.
 var netHiddenSize  = 2;  // hidden later.
 var netOutputSize  = 2;  // output layer.
 
-//
-// I've also added bias and alternative activators on a per layer basis.
-//
-
 //{{{  build net
 
-var netUseBias = 0;  // with is set to 0 everythign works like the blog post.
-                     // turn it on to experiment with adding bias to the model.
-
 //
-// Each node has 10 elements.
+// Each node has 7 elements.
 //
 
-var NETIN          = 0;  // node input = bias + sum of weights
+var NETIN          = 0;  // node input = sum of weights
 var NETGIN         = 1;  // gradient of above
-var NETOUT         = 2;  // node output = result of activation applied to node input
+var NETOUT         = 2;  // node output = sigmoid(input)
 var NETGOUT        = 3;  // gradient of above
 var NETWEIGHTS     = 4;  // weights for node
 var NETGWEIGHTS    = 5;  // gradients of above
 var NETGWEIGHTSSUM = 6;  // sum of above when batching
-var NETBIAS        = 7;  // bias for node
-var NETGBIAS       = 8;  // gradient of above
-var NETGBIASSUM    = 9;  // sum of above when batching
 
-var NETNODESIZE    = 10;
+var NETNODESIZE    = 7;
 
 var neti = Array(netInputSize);
 var neth = Array(netHiddenSize);
@@ -66,12 +56,9 @@ for (var h=0; h < netHiddenSize; h++) {
   neth[h][NETGIN]         = 0;
   neth[h][NETOUT]         = 0;
   neth[h][NETGOUT]        = 0;
-  neth[h][NETBIAS]        = 0;
-  neth[h][NETGBIAS]       = 0;
-  neth[h][NETGBIASSUM]    = 0;
-  neth[h][NETWEIGHTS]     = new Float64Array(netInputSize);
-  neth[h][NETGWEIGHTS]    = new Float64Array(netInputSize);
-  neth[h][NETGWEIGHTSSUM] = new Float64Array(netInputSize);
+  neth[h][NETWEIGHTS]     = Array(netInputSize);
+  neth[h][NETGWEIGHTS]    = Array(netInputSize);
+  neth[h][NETGWEIGHTSSUM] = Array(netInputSize);
 }
 
 for (var o=0; o < netOutputSize; o++) {
@@ -80,20 +67,14 @@ for (var o=0; o < netOutputSize; o++) {
   neto[o][NETGIN]         = 0;
   neto[o][NETOUT]         = 0;
   neto[o][NETGOUT]        = 0;
-  neto[o][NETBIAS]        = 0;
-  neto[o][NETGBIAS]       = 0;
-  neto[o][NETGBIASSUM]    = 0;
-  neto[o][NETWEIGHTS]     = new Float64Array(netInputSize);
-  neto[o][NETGWEIGHTS]    = new Float64Array(netInputSize);
-  neto[o][NETGWEIGHTSSUM] = new Float64Array(netInputSize);
+  neto[o][NETWEIGHTS]     = Array(netInputSize);
+  neto[o][NETGWEIGHTS]    = Array(netInputSize);
+  neto[o][NETGWEIGHTSSUM] = Array(netInputSize);
 }
 
 //}}}
 
-//{{{  activators
-
-var netOutputActivator = [];
-var netHiddenActivator = [];
+//{{{  sigmoid
 
 function sigmoid(x) {
   return (1.0 / (1.0 + Math.exp(-x)));
@@ -101,28 +82,6 @@ function sigmoid(x) {
 
 function dsigmoid(x) {
   return sigmoid(x) * (1.0 - sigmoid(x));
-}
-
-function relu(x) {
-  if (x > 0)
-    return x;
-  else
-    return 0;
-}
-
-function drelu(x) {
-  if (x > 0)
-    return 1;
-  else
-    return 0;
-}
-
-function linear(x) {
-  return x;
-}
-
-function dlinear(x) {
-  return 1;
 }
 
 //}}}
@@ -154,20 +113,20 @@ function netForward(inputs) {
 
   for (var h=0; h < netHiddenSize; h++) {
     var hidden = neth[h];
-    hidden[NETIN] = hidden[NETBIAS] * netUseBias;
+    hidden[NETIN] = 0;
     for (var i=0; i < netInputSize; i++) {
       hidden[NETIN] += hidden[NETWEIGHTS][i] * neti[i];
     }
-    hidden[NETOUT] = netHiddenActivator[0](neth[h][NETIN]);
+    hidden[NETOUT] = sigmoid(neth[h][NETIN]);
   }
 
   for (var o=0; o < netOutputSize; o++) {
     var output = neto[o];
-    output[NETIN] = output[NETBIAS] * netUseBias;
+    output[NETIN] = 0;
     for (var h=0; h < netHiddenSize; h++) {
       output[NETIN] += output[NETWEIGHTS][h] * neth[h][NETOUT];
     }
-    output[NETOUT] = netOutputActivator[0](neto[o][NETIN]);
+    output[NETOUT] = sigmoid(neto[o][NETIN]);
   }
 }
 
@@ -184,12 +143,11 @@ function netCalcGradients(targets) {
   for (var o=0; o < netOutputSize; o++) {
     var output = neto[o];
     output[NETGOUT] = 2 * (output[NETOUT] - targets[o]);
-    output[NETGIN]  = netOutputActivator[1](output[NETIN]) * output[NETGOUT];
+    output[NETGIN]  = dsigmoid(output[NETIN]) * output[NETGOUT];
   }
 
   for (var o=0; o < netOutputSize; o++) {
     var output = neto[o];
-    output[NETGBIAS] = output[NETGIN] * 1;
     for (var h=0; h < netHiddenSize; h++) {
       var hidden = neth[h];
       output[NETGWEIGHTS][h] = output[NETGIN] * hidden[NETOUT];
@@ -203,12 +161,11 @@ function netCalcGradients(targets) {
       var output = neto[o];
       hidden[NETGOUT] += output[NETGIN] * output[NETWEIGHTS][h];
     }
-    neth[h][NETGIN] = netHiddenActivator[1](neth[h][NETIN]) * neth[h][NETGOUT];
+    neth[h][NETGIN] = dsigmoid(neth[h][NETIN]) * neth[h][NETGOUT];
   }
 
   for (var h=0; h < netHiddenSize; h++) {
     var hidden = neth[h];
-    hidden[NETGBIAS] = hidden[NETGIN] * 1;
     for (var i=0; i < netInputSize; i++) {
       hidden[NETGWEIGHTS][i] = hidden[NETGIN] * neti[i];
     }
@@ -222,7 +179,6 @@ function netResetGradientSums() {
 
   for (var o=0; o < netOutputSize; o++) {
     var output = neto[o];
-    output[NETGBIASSUM] = 0.0;
     for (var h=0; h < netHiddenSize; h++) {
       output[NETGWEIGHTSSUM][h] = 0.0;
     }
@@ -230,7 +186,6 @@ function netResetGradientSums() {
 
   for (var h=0; h < netHiddenSize; h++) {
     var hidden = neth[h];
-    hidden[NETGBIASSUM] = 0.0;
     for (var i=0; i < netInputSize; i++) {
       hidden[NETGWEIGHTSSUM][i] = 0.0;
     }
@@ -244,7 +199,6 @@ function netAccumulateGradients() {
 
   for (var o=0; o < netOutputSize; o++) {
     var output = neto[o];
-    output[NETGBIASSUM] += output[NETGBIAS];
     for (var h=0; h < netHiddenSize; h++) {
       output[NETGWEIGHTSSUM][h] += output[NETGWEIGHTS][h];
     }
@@ -252,7 +206,6 @@ function netAccumulateGradients() {
 
   for (var h=0; h < netHiddenSize; h++) {
     var hidden = neth[h];
-    hidden[NETGBIASSUM] += hidden[NETGBIAS];
     for (var i=0; i < netInputSize; i++) {
       hidden[NETGWEIGHTSSUM][i] += hidden[NETGWEIGHTS][i];
     }
@@ -266,7 +219,6 @@ function netApplyGradients(b,alpha) {
 
   for (var o=0; o < netOutputSize; o++) {
     var output = neto[o];
-    output[NETBIAS] = alpha * (output[NETGBIASSUM] / b);
     for (var h=0; h < netHiddenSize; h++) {
       output[NETWEIGHTS][h] = output[NETWEIGHTS][h] - alpha * (output[NETGWEIGHTSSUM][h] / b);
     }
@@ -274,7 +226,6 @@ function netApplyGradients(b,alpha) {
 
   for (var h=0; h < netHiddenSize; h++) {
     var hidden = neth[h];
-    hidden[NETBIAS] = alpha * (hidden[NETGBIASSUM] / b);
     for (var i=0; i < netInputSize; i++) {
       hidden[NETWEIGHTS][i] = hidden[NETWEIGHTS][i] - alpha * (hidden[NETGWEIGHTSSUM][i] / b);
     }
@@ -283,19 +234,15 @@ function netApplyGradients(b,alpha) {
 
 //}}}
 
-neth[0][NETBIAS]       = 0.0;  // ignored unless netUseBias is 1. bias not used in blog post.
 neth[0][NETWEIGHTS][0] = 6.0;
 neth[0][NETWEIGHTS][1] = -2.0;
 
-neth[1][NETBIAS]       = 0.0;  // ditto.
 neth[1][NETWEIGHTS][0] = -3.0;
 neth[1][NETWEIGHTS][1] = 5.0;
 
-neto[0][NETBIAS]       = 0.0;  // ditto.
 neto[0][NETWEIGHTS][0] = 1.0;
 neto[0][NETWEIGHTS][1] = 0.25;
 
-neto[1][NETBIAS]       = 0.0;  // ditto.
 neto[1][NETWEIGHTS][0] = -2.0;
 neto[1][NETWEIGHTS][1] = 2.0;
 
@@ -304,10 +251,6 @@ var t1 = [1,0];
 
 var i2 = [-1,4];
 var t2 = [0,1];
-
-netHiddenActivator = [sigmoid,dsigmoid]; // as per blog post.
-//netHiddenActivator = [relu,drelu];
-netOutputActivator = [sigmoid,dsigmoid]; // as per blog post.
 
 var inputList  = [i1,i2];
 var targetList = [t1,t2];
