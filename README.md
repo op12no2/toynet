@@ -3,7 +3,8 @@ A Javascript version of Alexander Schiendorfer's blog post "A worked example of 
 
 https://alexander-schiendorfer.github.io/2020/02/24/a-worked-example-of-backprop.html
 
-Download the file and run in a Javascript interpreter like Nodejs for example.
+Download the toynet.js and run in a Javascript interpreter like Nodejs for example. By default it runs the batching example on page 33, but
+it easy to play around with using console.log().
 
 The code is generalised a bit so the shape of the network can be changed. I added bias and alternative activatiion functions. 
 
