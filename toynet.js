@@ -182,7 +182,7 @@ function netCalcGradients(targets) {
 
   for (var o=0; o < netOutputSize; o++) {
     var output = neto[o];
-    output[NETGBIAS][h] = output[NETGIN] * 1;
+    output[NETGBIAS] = output[NETGIN] * 1;
     for (var h=0; h < netHiddenSize; h++) {
       var hidden = neth[h];
       output[NETGWEIGHTS][h] = output[NETGIN] * hidden[NETOUT];
