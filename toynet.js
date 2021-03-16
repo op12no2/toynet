@@ -37,10 +37,10 @@ var netOutputSize  = 2;  // output layer.
 //{{{  build net
 
 var netUseBias = 0;  // with is set to 0 everythign works like the blog post.
-                     // turn it on to experiment with using bias as well.
+                     // turn it on to experiment with adding bias to the model.
 
 //
-// Each node has 9 elements.
+// Each node has 10 elements.
 //
 
 var NETIN          = 0;  // node input = bias + sum of weights
@@ -335,6 +335,8 @@ for (var epoch=0; epoch < 200; epoch++) {  // see page 33 - "iterate for 200 epo
 
   netApplyGradients(1,0.5);
 }
+
+console.log('outputs after 200 epochs, see page 33');
 
 netForward(i1)
 console.log(neto[0][NETOUT],neto[1][NETOUT]);
