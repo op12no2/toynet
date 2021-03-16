@@ -7,8 +7,6 @@ Download toynet.js and run with Nodejs (for example).
 
 The code is generalised a bit so the shape of the network can be changed.
 
-Alexander's post was the one that made everything crystal clear to me; it's worth working through page by page, using the Javascript model to console.log() the relevant data as it's presented in the post.
-
 By default it runs the batching example on (A4 size) page 33.
 
 ```
