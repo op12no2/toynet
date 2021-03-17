@@ -126,7 +126,7 @@ function netForward(inputs) {
     for (var h=0; h < netHiddenSize; h++) {
       output[NETIN] += output[NETWEIGHTS][h] * neth[h][NETOUT];
     }
-    output[NETOUT] = sigmoid(neto[o][NETIN]);
+    output[NETOUT] = sigmoid(output[NETIN]);
   }
 }
 
