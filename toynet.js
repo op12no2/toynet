@@ -67,9 +67,9 @@ for (var o=0; o < netOutputSize; o++) {
   neto[o][NETGIN]         = 0;
   neto[o][NETOUT]         = 0;
   neto[o][NETGOUT]        = 0;
-  neto[o][NETWEIGHTS]     = Array(netInputSize);
-  neto[o][NETGWEIGHTS]    = Array(netInputSize);
-  neto[o][NETGWEIGHTSSUM] = Array(netInputSize);
+  neto[o][NETWEIGHTS]     = Array(netHiddenSize);
+  neto[o][NETGWEIGHTS]    = Array(netHiddenSize);
+  neto[o][NETGWEIGHTSSUM] = Array(netHiddenSize);
 }
 
 //}}}
