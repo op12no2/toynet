@@ -117,7 +117,7 @@ function netForward(inputs) {
     for (var i=0; i < netInputSize; i++) {
       hidden[NETIN] += hidden[NETWEIGHTS][i] * neti[i];
     }
-    hidden[NETOUT] = sigmoid(neth[h][NETIN]);
+    hidden[NETOUT] = sigmoid(hidden[NETIN]);
   }
 
   for (var o=0; o < netOutputSize; o++) {
@@ -161,7 +161,7 @@ function netCalcGradients(targets) {
       var output = neto[o];
       hidden[NETGOUT] += output[NETGIN] * output[NETWEIGHTS][h];
     }
-    neth[h][NETGIN] = dsigmoid(neth[h][NETIN]) * neth[h][NETGOUT];
+    hidden[NETGIN] = dsigmoid(hidden[NETIN]) * hidden[NETGOUT];
   }
 
   for (var h=0; h < netHiddenSize; h++) {
