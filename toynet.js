@@ -5,10 +5,6 @@
 // "A worked example of backpropagation" at
 // https://alexander-schiendorfer.github.io/2020/02/24/a-worked-example-of-backprop.html
 //
-// Objects not used because of the longer term development intentions and planned
-// optimisations inside Lozza chess https://github.com/op12no2/lozza
-//
-// Many of the loops can be collapsed, functions optimised and globals removed - but
 // I've kept it all simple for clarity.
 //
 // If you use a folding editor the fold marks are {{{ and }}}.
@@ -32,44 +28,26 @@ var netOutputSize  = 2;  // output layer.
 
 //{{{  build net
 
-//
-// Each node has 7 elements.
-//
-
-var NETIN          = 0;  // node input = sum of weights
-var NETGIN         = 1;  // gradient of above
-var NETOUT         = 2;  // node output = sigmoid(input)
-var NETGOUT        = 3;  // gradient of above
-var NETWEIGHTS     = 4;  // weights for node
-var NETGWEIGHTS    = 5;  // gradients of above
-var NETGWEIGHTSSUM = 6;  // sum of above when batching
-
-var NETNODESIZE    = 7;
-
-var neti = Array(netInputSize);
-var neth = Array(netHiddenSize);
-var neto = Array(netOutputSize);
-
-for (var h=0; h < netHiddenSize; h++) {
-  neth[h]                 = Array(NETNODESIZE);
-  neth[h][NETIN]          = 0;
-  neth[h][NETGIN]         = 0;
-  neth[h][NETOUT]         = 0;
-  neth[h][NETGOUT]        = 0;
-  neth[h][NETWEIGHTS]     = Array(netInputSize);
-  neth[h][NETGWEIGHTS]    = Array(netInputSize);
-  neth[h][NETGWEIGHTSSUM] = Array(netInputSize);
+function netNode (weightsSize) {
+  this.in          = 0;
+  this.gin         = 0;
+  this.out         = 0;
+  this.gout        = 0;
+  this.weights     = Array(weightsSize);
+  this.gweights    = Array(weightsSize);
+  this.gweightssum = Array(weightsSize);
 }
 
+var neti = Array(netInputSize);
+
+var neth = Array(netHiddenSize);
+for (var h=0; h < netHiddenSize; h++) {
+  neth[h] = new netNode(netInputSize);
+}
+
+var neto = Array(netOutputSize);
 for (var o=0; o < netOutputSize; o++) {
-  neto[o]                 = Array(NETNODESIZE);
-  neto[o][NETIN]          = 0;
-  neto[o][NETGIN]         = 0;
-  neto[o][NETOUT]         = 0;
-  neto[o][NETGOUT]        = 0;
-  neto[o][NETWEIGHTS]     = Array(netHiddenSize);
-  neto[o][NETGWEIGHTS]    = Array(netHiddenSize);
-  neto[o][NETGWEIGHTSSUM] = Array(netHiddenSize);
+  neto[o] = new netNode(netHiddenSize);
 }
 
 //}}}
@@ -92,7 +70,7 @@ function netLoss(target) {
   var x = 0.0;
 
   for (var o=0; o < netOutputSize; o++) {
-    x += (target[o] - neto[o][NETOUT]) * (target[o] - neto[o][NETOUT]);
+    x += (target[o] - neto[o].out) * (target[o] - neto[o].out);
   }
 
   return x;
@@ -113,20 +91,20 @@ function netForward(inputs) {
 
   for (var h=0; h < netHiddenSize; h++) {
     var hidden = neth[h];
-    hidden[NETIN] = 0;
+    hidden.in = 0;
     for (var i=0; i < netInputSize; i++) {
-      hidden[NETIN] += hidden[NETWEIGHTS][i] * neti[i];
+      hidden.in += hidden.weights[i] * neti[i];
     }
-    hidden[NETOUT] = sigmoid(hidden[NETIN]);
+    hidden.out = sigmoid(hidden.in);
   }
 
   for (var o=0; o < netOutputSize; o++) {
     var output = neto[o];
-    output[NETIN] = 0;
+    output.in = 0;
     for (var h=0; h < netHiddenSize; h++) {
-      output[NETIN] += output[NETWEIGHTS][h] * neth[h][NETOUT];
+      output.in += output.weights[h] * neth[h].out;
     }
-    output[NETOUT] = sigmoid(output[NETIN]);
+    output.out = sigmoid(output.in);
   }
 }
 
@@ -142,32 +120,32 @@ function netCalcGradients(targets) {
 
   for (var o=0; o < netOutputSize; o++) {
     var output = neto[o];
-    output[NETGOUT] = 2 * (output[NETOUT] - targets[o]);
-    output[NETGIN]  = dsigmoid(output[NETIN]) * output[NETGOUT];
+    output.gout = 2 * (output.out - targets[o]);
+    output.gin  = dsigmoid(output.in) * output.gout;
   }
 
   for (var o=0; o < netOutputSize; o++) {
     var output = neto[o];
     for (var h=0; h < netHiddenSize; h++) {
       var hidden = neth[h];
-      output[NETGWEIGHTS][h] = output[NETGIN] * hidden[NETOUT];
+      output.gweights[h] = output.gin * hidden.out;
     }
   }
 
   for (var h=0; h < netHiddenSize; h++) {
     var hidden = neth[h];
-    hidden[NETGOUT] = 0;
+    hidden.gout = 0;
     for (var o=0; o < netOutputSize; o++) {
       var output = neto[o];
-      hidden[NETGOUT] += output[NETGIN] * output[NETWEIGHTS][h];
+      hidden.gout += output.gin * output.weights[h];
     }
-    hidden[NETGIN] = dsigmoid(hidden[NETIN]) * hidden[NETGOUT];
+    hidden.gin = dsigmoid(hidden.in) * hidden.gout;
   }
 
   for (var h=0; h < netHiddenSize; h++) {
     var hidden = neth[h];
     for (var i=0; i < netInputSize; i++) {
-      hidden[NETGWEIGHTS][i] = hidden[NETGIN] * neti[i];
+      hidden.gweights[i] = hidden.gin * neti[i];
     }
   }
 }
@@ -180,14 +158,14 @@ function netResetGradientSums() {
   for (var o=0; o < netOutputSize; o++) {
     var output = neto[o];
     for (var h=0; h < netHiddenSize; h++) {
-      output[NETGWEIGHTSSUM][h] = 0.0;
+      output.gweightssum[h] = 0.0;
     }
   }
 
   for (var h=0; h < netHiddenSize; h++) {
     var hidden = neth[h];
     for (var i=0; i < netInputSize; i++) {
-      hidden[NETGWEIGHTSSUM][i] = 0.0;
+      hidden.gweightssum[i] = 0.0;
     }
   }
 }
@@ -200,14 +178,14 @@ function netAccumulateGradients() {
   for (var o=0; o < netOutputSize; o++) {
     var output = neto[o];
     for (var h=0; h < netHiddenSize; h++) {
-      output[NETGWEIGHTSSUM][h] += output[NETGWEIGHTS][h];
+      output.gweightssum[h] += output.gweights[h];
     }
   }
 
   for (var h=0; h < netHiddenSize; h++) {
     var hidden = neth[h];
     for (var i=0; i < netInputSize; i++) {
-      hidden[NETGWEIGHTSSUM][i] += hidden[NETGWEIGHTS][i];
+      hidden.gweightssum[i] += hidden.gweights[i];
     }
   }
 }
@@ -220,31 +198,31 @@ function netApplyGradients(b,alpha) {
   for (var o=0; o < netOutputSize; o++) {
     var output = neto[o];
     for (var h=0; h < netHiddenSize; h++) {
-      output[NETWEIGHTS][h] = output[NETWEIGHTS][h] - alpha * (output[NETGWEIGHTSSUM][h] / b);
+      output.weights[h] = output.weights[h] - alpha * (output.gweightssum[h] / b);
     }
   }
 
   for (var h=0; h < netHiddenSize; h++) {
     var hidden = neth[h];
     for (var i=0; i < netInputSize; i++) {
-      hidden[NETWEIGHTS][i] = hidden[NETWEIGHTS][i] - alpha * (hidden[NETGWEIGHTSSUM][i] / b);
+      hidden.weights[i] = hidden.weights[i] - alpha * (hidden.gweightssum[i] / b);
     }
   }
 }
 
 //}}}
 
-neth[0][NETWEIGHTS][0] = 6.0;
-neth[0][NETWEIGHTS][1] = -2.0;
+neth[0].weights[0] = 6.0;
+neth[0].weights[1] = -2.0;
 
-neth[1][NETWEIGHTS][0] = -3.0;
-neth[1][NETWEIGHTS][1] = 5.0;
+neth[1].weights[0] = -3.0;
+neth[1].weights[1] = 5.0;
 
-neto[0][NETWEIGHTS][0] = 1.0;
-neto[0][NETWEIGHTS][1] = 0.25;
+neto[0].weights[0] = 1.0;
+neto[0].weights[1] = 0.25;
 
-neto[1][NETWEIGHTS][0] = -2.0;
-neto[1][NETWEIGHTS][1] = 2.0;
+neto[1].weights[0] = -2.0;
+neto[1].weights[1] = 2.0;
 
 var i1 = [3,1];
 var t1 = [1,0];
@@ -282,10 +260,10 @@ for (var epoch=0; epoch < 200; epoch++) {  // see page 33 - "iterate for 200 epo
 console.log('outputs after 200 epochs, see page 33');
 
 netForward(i1)
-console.log(neto[0][NETOUT],neto[1][NETOUT]);
+console.log(neto[0].out,neto[1].out);
 
 netForward(i2)
-console.log(neto[0][NETOUT],neto[1][NETOUT]);
+console.log(neto[0].out,neto[1].out);
 
 console.log('done');
 
