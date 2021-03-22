@@ -1,11 +1,9 @@
 //
 // @colintomjenkins
 //
-// A simple Javascript implementation of @schienal's blog post titled
+// A Javascript version of @schienal's blog post titled
 // "A worked example of backpropagation" at
 // https://alexander-schiendorfer.github.io/2020/02/24/a-worked-example-of-backprop.html
-//
-// I've kept it all simple for clarity.
 //
 // If you use a folding editor the fold marks are {{{ and }}}.
 //
