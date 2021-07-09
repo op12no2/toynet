@@ -107,6 +107,26 @@ function netForward(inputs) {
 }
 
 //}}}
+//{{{  netInitWeights()
+
+function netInitWeights() {
+
+  for (var h=0; h < netHiddenSize; h++) {
+    var hidden = neth[h];
+    for (var i=0; i < netInputSize; i++) {
+      hidden.weights[i] = Math.random();
+    }
+  }
+
+  for (var o=0; o < netOutputSize; o++) {
+    var output = neto[o];
+    for (var h=0; h < netHiddenSize; h++) {
+      output.weights[h] = Math.random();
+    }
+  }
+}
+
+//}}}
 //{{{  netCalcGradients()
 
 function netCalcGradients(targets) {
@@ -222,6 +242,8 @@ neto[0].weights[1] = 0.25;
 neto[1].weights[0] = -2.0;
 neto[1].weights[1] = 2.0;
 
+//netInitWeights();
+
 var i1 = [3,1];
 var t1 = [1,0];
 
@@ -252,7 +274,7 @@ for (var epoch=0; epoch < 200; epoch++) {  // see page 33 - "iterate for 200 epo
 
   //console.log ('loss',loss);
 
-  netApplyGradients(1,0.5);
+  netApplyGradients(1,0.5);  // a more usual learning rate is something like 0.001
 }
 
 console.log('outputs after 200 epochs, see page 33');
